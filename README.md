@@ -24,6 +24,12 @@ Default exercises (desk-friendly):
 Requires [uv](https://docs.astral.sh/uv/) and Python 3.12+.
 
 ```bash
+uv run https://raw.githubusercontent.com/odysa/vibe-wellness/main/install.py
+```
+
+Or with curl:
+
+```bash
 curl -fsSL https://raw.githubusercontent.com/odysa/vibe-wellness/main/install.sh | bash
 ```
 
