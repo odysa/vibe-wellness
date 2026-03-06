@@ -79,6 +79,9 @@ def info(msg):
     print(f"  {DIM}{msg}{RESET}")
 
 
+IS_TTY = sys.stdin.isatty()
+
+
 def read_key():
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
@@ -104,6 +107,16 @@ def _handle_key(key, cur, n):
 
 
 def select(options, default=0):
+    if not IS_TTY:
+        for i, (label, _) in enumerate(options):
+            marker = ">" if i == default else " "
+            print(f"  {marker} {label}")
+        choice = input(f"  [{default + 1}]: ").strip()
+        try:
+            return options[int(choice) - 1][1]
+        except (ValueError, IndexError):
+            return options[default][1]
+
     cur = default
     n = len(options)
 
@@ -134,10 +147,24 @@ def select(options, default=0):
 
 
 def multiselect(options, selected=None):
-    cur = 0
     n = len(options)
     if selected is None:
         selected = set(range(n))
+
+    if not IS_TTY:
+        for i, label in enumerate(options):
+            check = "*" if i in selected else " "
+            print(f"  [{check}] {i + 1}. {label}")
+        choice = input(f"  Toggle (e.g. 1,3) or enter for all: ").strip()
+        if choice:
+            for num in choice.split(","):
+                try:
+                    selected ^= {int(num.strip()) - 1}
+                except (ValueError, IndexError):
+                    pass
+        return sorted(selected)
+
+    cur = 0
     hint_lines = 2
 
     def draw():
