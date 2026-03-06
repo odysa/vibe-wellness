@@ -6,18 +6,11 @@ Exercise reminder overlay for macOS. Pops up during Claude Code sessions to remi
 
 ## What it does
 
-A floating overlay window appears every 15 minutes when you're using Claude Code:
+A floating overlay window appears periodically when you're using Claude Code:
 
 1. 3-second countdown with exercise name
 2. Animated stick figure GIF showing the exercise
 3. Auto-dismisses after 30 seconds (or click to dismiss)
-
-Default exercises (desk-friendly):
-- Kegels / 提肛
-- Drink Water / 喝水
-- Squats / 深蹲
-- Wall Push-ups / 靠墙俯卧撑
-- Neck Rolls / 颈椎运动
 
 ## Install
 
@@ -25,20 +18,33 @@ Default exercises (desk-friendly):
 curl -fsSL https://raw.githubusercontent.com/odysa/vibe-wellness/main/install.sh | bash
 ```
 
-Or if you already have [uv](https://docs.astral.sh/uv/):
+The installer will:
+1. Install [uv](https://docs.astral.sh/uv/) (if not found)
+2. Install `vibe-wellness` from PyPI
+3. Run the interactive setup wizard
+
+### Manual install
+
+If you prefer to install manually:
 
 ```bash
-uvx vibe-wellness
+uv tool install vibe-wellness
+vibe-wellness          # run setup wizard
 ```
 
-The interactive installer will:
-- Ask your preferred language, reminder interval, and exercises
-- Install `vibe-wellness` as a tool via `uv tool install`
-- Add a `UserPromptSubmit` hook to `~/.claude/settings.json`
+## Exercises
+
+| Key | English | 中文 | GIF |
+|-----|---------|------|-----|
+| `kegels` | Kegels | 提肛 | included |
+| `drink_water` | Drink Water | 喝水 | included |
+| `squats` | Squats | 深蹲 | included |
+| `wall_pushups` | Wall Push-ups | 靠墙俯卧撑 | included |
+| `neck_rolls` | Neck Rolls | 颈椎运动 | included |
 
 ## Configuration
 
-Edit `~/.config/vibe-wellness/config.json`:
+Edit `~/.config/vibe-wellness/config.json`, or re-run `vibe-wellness` to launch the setup wizard.
 
 ```json
 {
@@ -73,22 +79,30 @@ Drop a `{key}.gif` in `~/.config/vibe-wellness/gifs/` to use your own animation 
 
 ## Uninstall
 
-Remove the `vibe-wellness` hook entry from `~/.claude/settings.json`, then:
+```bash
+vibe-wellness --uninstall
+```
+
+Or manually:
 
 ```bash
 uv tool uninstall vibe-wellness
 rm -rf ~/.config/vibe-wellness
 ```
 
+Then remove the `vibe-wellness` hook entry from `~/.claude/settings.json`.
+
 ## Project structure
 
 ```
+install.sh                # Installer: installs package + runs setup
 vibe_wellness/
-  cli.py              # Entry point: install / --show / --overlay
-  installer.py        # Interactive installer with TUI
-  show.py             # Single-instance guard + interval check
-  ui.py               # Overlay window (tkinter)
-  config.py           # Config loading, i18n, language detection
-  config.json         # Default config + exercises
-  gifs/               # Bundled exercise GIFs
+  cli.py                  # Entry point: --show / --overlay / --uninstall / setup
+  installer.py            # Interactive setup wizard (TUI)
+  show.py                 # Single-instance guard + interval check
+  ui.py                   # Overlay window (tkinter)
+  config.py               # Config loading, i18n, language detection
+  config.json             # Default config + exercises
+  uninstall.py            # Clean removal
+  gifs/                   # Bundled exercise GIFs
 ```

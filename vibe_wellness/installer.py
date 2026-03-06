@@ -1,8 +1,7 @@
-"""Interactive installer for vibe-wellness."""
+"""Interactive setup wizard for vibe-wellness."""
 
 import json
 import shutil
-import subprocess
 import sys
 import termios
 import tty
@@ -36,7 +35,6 @@ I18N = {
         "subtitle": "Exercise reminders for Claude Code",
         "interval": "Reminder interval",
         "exercises": "Exercises",
-        "installing": "Installing vibe-wellness",
         "config": "Setting up config",
         "wrote": "Wrote",
         "hook_title": "Claude Code hook",
@@ -58,7 +56,6 @@ I18N = {
         "subtitle": "Claude Code 运动提醒",
         "interval": "提醒间隔",
         "exercises": "运动项目",
-        "installing": "安装 vibe-wellness",
         "config": "配置",
         "wrote": "已写入",
         "hook_title": "Claude Code 钩子",
@@ -222,12 +219,8 @@ def multiselect(options, selected=None):
 
 def main():
     print()
-    print(f"{BOLD}  vibe-wellness installer{RESET}")
+    print(f"{BOLD}  vibe-wellness setup{RESET}")
     print()
-
-    if not shutil.which("uv"):
-        print("uv is required. Install: curl -LsSf https://astral.sh/uv/install.sh | sh")
-        sys.exit(1)
 
     # Language (always bilingual)
     say("Language / 语言")
@@ -274,16 +267,6 @@ def main():
     say(t["hook_pick"])
     hook_options = HOOKS.get(display_lang, HOOKS["en"])
     hook_event = select(hook_options, default=0)
-    print()
-
-    # Install via uv tool (use managed Python to ensure tkinter is available)
-    say(t["installing"])
-    subprocess.run(["uv", "python", "install", "3.12"], check=True)
-    subprocess.run(
-        ["uv", "tool", "install", "vibe-wellness",
-         "--python", "3.12", "--python-preference", "only-managed", "--force"],
-        check=True,
-    )
     print()
 
     # User config
