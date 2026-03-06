@@ -12,8 +12,8 @@ if ! command -v uv &>/dev/null; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
-# 2. Install the package
-uv tool install vibe-wellness --force
+# 2. Install the package (--no-cache to get latest version)
+uv tool install vibe-wellness --force --no-cache
 
 # 3. Verify the binary is accessible
 if ! command -v vibe-wellness &>/dev/null; then
@@ -23,5 +23,5 @@ if ! command -v vibe-wellness &>/dev/null; then
     exit 1
 fi
 
-# 4. Run interactive setup
-vibe-wellness
+# 4. Run interactive setup (redirect stdin from /dev/tty for curl | bash)
+vibe-wellness </dev/tty
