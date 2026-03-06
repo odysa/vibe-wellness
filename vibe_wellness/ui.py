@@ -20,22 +20,45 @@ for _prefix, _var in [("tcl", "TCL_LIBRARY"), ("tk", "TK_LIBRARY")]:
             os.environ.setdefault(_var, str(_p))
             break
 
-# Hide dock icon and menu bar (NSApplication accessory mode)
+# ObjC runtime helpers for macOS window management
+import ctypes, ctypes.util
 try:
-    import ctypes, ctypes.util
     _objc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("objc"))
     _objc.objc_getClass.restype = ctypes.c_void_p
     _objc.sel_registerName.restype = ctypes.c_void_p
     _objc.objc_msgSend.restype = ctypes.c_void_p
-    _objc.objc_msgSend.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
-    _app = _objc.objc_msgSend(
-        _objc.objc_getClass(b"NSApplication"),
-        _objc.sel_registerName(b"sharedApplication"),
-    )
-    _objc.objc_msgSend.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int64]
-    _objc.objc_msgSend(_app, _objc.sel_registerName(b"setActivationPolicy:"), 1)
+
+    def _sel(name):
+        return _objc.sel_registerName(name.encode())
+
+    def _msg(obj, selector, *args):
+        _objc.objc_msgSend.argtypes = [ctypes.c_void_p, ctypes.c_void_p] + [type(a) for a in args]
+        _objc.objc_msgSend.restype = ctypes.c_void_p
+        return _objc.objc_msgSend(obj, _sel(selector), *args)
+
+    # Hide dock icon and menu bar (accessory mode)
+    _app = _msg(_objc.objc_getClass(b"NSApplication"), "sharedApplication")
+    _msg(_app, "setActivationPolicy:", ctypes.c_int64(1))
+    _HAS_OBJC = True
 except Exception:
-    pass
+    _HAS_OBJC = False
+
+
+def _make_borderless():
+    """Set all NSWindows to borderless (styleMask=0) to remove title bar dots."""
+    if not _HAS_OBJC:
+        return
+    try:
+        app = _msg(_objc.objc_getClass(b"NSApplication"), "sharedApplication")
+        windows = _msg(app, "windows")
+        _objc.objc_msgSend.restype = ctypes.c_uint64
+        _objc.objc_msgSend.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+        n = _objc.objc_msgSend(windows, _sel("count"))
+        for i in range(n):
+            w = _msg(windows, "objectAtIndex:", ctypes.c_uint64(i))
+            _msg(w, "setStyleMask:", ctypes.c_uint64(0))
+    except Exception:
+        pass
 
 import tkinter as tk
 
@@ -119,10 +142,9 @@ def create_window(cfg, has_gif):
     root.update_idletasks()
     root.geometry(f"+{x}+{y}")
 
-    try:
-        root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "none")
-    except tk.TclError:
-        pass
+    # Remove title bar dots (set NSWindow to borderless)
+    root.update()
+    _make_borderless()
 
     return root, w, h
 
