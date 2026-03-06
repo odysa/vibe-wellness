@@ -228,10 +228,12 @@ def main():
     hook_event = select(hook_options, default=0)
     print()
 
-    # Install via uv tool
+    # Install via uv tool (use managed Python to ensure tkinter is available)
     say(t["installing"])
+    subprocess.run(["uv", "python", "install", "3.12"], check=True)
     subprocess.run(
-        ["uv", "tool", "install", "vibe-wellness", "--python", "3.12", "--force"],
+        ["uv", "tool", "install", "vibe-wellness",
+         "--python", "3.12", "--python-preference", "only-managed", "--force"],
         check=True,
     )
     print()
