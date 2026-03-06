@@ -2,6 +2,7 @@
 
 import json
 import shutil
+import subprocess
 import sys
 import termios
 import tty
@@ -36,6 +37,7 @@ I18N = {
         "subtitle": "Exercise reminders for Claude Code",
         "interval": "Reminder interval",
         "exercises": "Exercises",
+        "installing": "Installing vibe-wellness",
         "config": "Setting up config",
         "wrote": "Wrote",
         "hook_title": "Claude Code hook",
@@ -57,6 +59,7 @@ I18N = {
         "subtitle": "Claude Code 运动提醒",
         "interval": "提醒间隔",
         "exercises": "运动项目",
+        "installing": "安装 vibe-wellness",
         "config": "配置",
         "wrote": "已写入",
         "hook_title": "Claude Code 钩子",
@@ -275,6 +278,15 @@ def main():
     hook_options = HOOKS.get(display_lang, HOOKS["en"])
     hook_event = select(hook_options, default=0)
     print()
+
+    # Install binary if not already present (e.g. running via uvx)
+    if not BIN_PATH.exists() and shutil.which("uv"):
+        say(t.get("installing", "Installing vibe-wellness"))
+        subprocess.run(
+            ["uv", "tool", "install", "vibe-wellness", "--force"],
+            check=True,
+        )
+        print()
 
     # User config
     say(t["config"])
