@@ -9,7 +9,8 @@ from pathlib import Path
 
 CONFIG_DIR = Path.home() / ".config" / "vibe-wellness"
 SETTINGS = Path.home() / ".claude" / "settings.json"
-HOOK_CMD = "vibe-wellness --show"
+BIN_PATH = Path.home() / ".local" / "bin" / "vibe-wellness"
+HOOK_CMD = str(BIN_PATH) + " --show"
 
 
 def hook_installed(event):
@@ -298,7 +299,19 @@ def main():
                     break
 
         if already:
-            info(t["hook_already"])
+            # Update old hooks that use short command to full path
+            updated = False
+            for group in settings.get("hooks", {}).get(hook_event, []):
+                for h in group.get("hooks", []):
+                    cmd = h.get("command", "")
+                    if "vibe-wellness" in cmd and cmd != HOOK_CMD:
+                        h["command"] = HOOK_CMD
+                        updated = True
+            if updated:
+                SETTINGS.write_text(json.dumps(settings, indent=2) + "\n")
+                info(f"{t['hook_added']} ({hook_event})")
+            else:
+                info(t["hook_already"])
         else:
             hooks = settings.setdefault("hooks", {})
             hooks.setdefault(hook_event, []).append({
@@ -316,7 +329,7 @@ def main():
     # Verify
     say(t["verify"])
     checks = [
-        (shutil.which("vibe-wellness") is not None, t["check_tool"]),
+        (BIN_PATH.exists() or shutil.which("vibe-wellness") is not None, t["check_tool"]),
         ((CONFIG_DIR / "config.json").exists(), t["check_config"]),
         (hook_installed(hook_event), t["check_hook"].format(hook_event)),
     ]
@@ -334,7 +347,10 @@ def main():
     else:
         print(f"{BOLD}\033[31m  {t['done_partial']}{RESET}")
     print()
-    info(t["remind_every"].format(interval // 60))
+    if interval >= 60:
+        info(t["remind_every"].format(interval // 60))
+    else:
+        info(f"Reminders every {interval}s")
     info(f"Config: {CONFIG_DIR / 'config.json'}")
     info(t["uninstall"])
     print()
