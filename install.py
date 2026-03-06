@@ -92,6 +92,50 @@ def select(options, default=0):
         draw()
 
 
+def multiselect(options, selected=None):
+    """Arrow keys to move, Space to toggle, Enter to confirm."""
+    cur = 0
+    n = len(options)
+    if selected is None:
+        selected = set(range(n))
+
+    def draw():
+        for i, label in enumerate(options):
+            arrow = f"{CYAN}>{RESET}" if i == cur else " "
+            check = f"{GREEN}*{RESET}" if i in selected else " "
+            style = BOLD if i == cur else DIM
+            print(f"  {arrow} [{check}] {style}{label}{RESET}")
+        print(f"\n  {DIM}space: toggle  enter: confirm{RESET}")
+
+    draw()
+    extra_lines = 2  # blank line + hint
+    total = n + extra_lines
+    while True:
+        key = read_key()
+        if key == "\x1b[A":
+            cur = (cur - 1) % n
+        elif key == "\x1b[B":
+            cur = (cur + 1) % n
+        elif key == " ":
+            selected ^= {cur}
+        elif key in ("\r", "\n"):
+            sys.stdout.write(f"{UP}{CLEAR_LINE}" * total)
+            sys.stdout.flush()
+            for i, label in enumerate(options):
+                check = f"{GREEN}*{RESET}" if i in selected else " "
+                style = BOLD if i in selected else DIM
+                print(f"    [{check}] {style}{label}{RESET}")
+            return sorted(selected)
+        elif key in ("\x03", "\x04"):
+            print()
+            sys.exit(0)
+        else:
+            continue
+        sys.stdout.write(f"{UP}{CLEAR_LINE}" * total)
+        sys.stdout.flush()
+        draw()
+
+
 def main():
     print()
     print(f"{BOLD}  vibe-wellness installer{RESET}")
@@ -139,12 +183,23 @@ def main():
     say("Installing dependencies")
     subprocess.run(["uv", "sync", "--project", str(INSTALL_DIR), "--quiet"], check=True)
 
+    # Exercise selection
+    default_config = json.loads((INSTALL_DIR / "vibe_wellness" / "config.json").read_text())
+    all_exercises = default_config["exercises"]
+    display_key = "zh" if lang == "zh" else "en"
+    labels = [ex["name"].get(display_key, ex["name"]["en"]) for ex in all_exercises]
+
+    say("Exercises")
+    chosen = multiselect(labels)
+    exercises = [all_exercises[i] for i in chosen]
+    print()
+
     # User config
     say("Setting up config")
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "gifs").mkdir(exist_ok=True)
-    config = {"lang": lang, "interval": interval}
-    (CONFIG_DIR / "config.json").write_text(json.dumps(config, indent=2) + "\n")
+    config = {"lang": lang, "interval": interval, "exercises": exercises}
+    (CONFIG_DIR / "config.json").write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n")
     info(f"Wrote {CONFIG_DIR / 'config.json'}")
 
     # Scripts
