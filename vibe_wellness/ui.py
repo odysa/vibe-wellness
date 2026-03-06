@@ -11,12 +11,14 @@ from pathlib import Path
 LOCK_DIR = Path("/tmp/vibe-wellness.lock")
 atexit.register(lambda: shutil.rmtree(LOCK_DIR, ignore_errors=True))
 
-# Fix Tcl/Tk paths for venv
+# Fix Tcl/Tk paths for venv (supports Tcl/Tk 8.6 and 9.0)
 _base = Path(sys.base_prefix) / "lib"
-for _name, _var in [("tcl8.6", "TCL_LIBRARY"), ("tk8.6", "TK_LIBRARY")]:
-    _p = _base / _name
-    if _p.exists():
-        os.environ.setdefault(_var, str(_p))
+for _prefix, _var in [("tcl", "TCL_LIBRARY"), ("tk", "TK_LIBRARY")]:
+    for _ver in ["9.0", "8.6"]:
+        _p = _base / f"{_prefix}{_ver}"
+        if _p.exists():
+            os.environ.setdefault(_var, str(_p))
+            break
 
 import tkinter as tk
 
@@ -79,7 +81,10 @@ def create_window(cfg, has_gif):
 
     x = (sw - w) // 2
     y = (sh - h) // 2
-    root.geometry(f"{w}x{h}+{x}+{y}")
+    # Set size first, then position after update — fixes overrideredirect on macOS
+    root.geometry(f"{w}x{h}")
+    root.update_idletasks()
+    root.geometry(f"+{x}+{y}")
 
     try:
         root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "noTitleBar")
