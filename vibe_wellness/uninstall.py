@@ -13,7 +13,6 @@ SETTINGS = Path.home() / ".claude" / "settings.json"
 BOLD = "\033[1m"
 DIM = "\033[2m"
 GREEN = "\033[32m"
-RED = "\033[31m"
 RESET = "\033[0m"
 
 

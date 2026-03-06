@@ -70,12 +70,9 @@ CARD = "#242540"
 FG = "#e8e8f0"
 DIM = "#6e6e8a"
 ACCENT = "#7c8aff"
-ACCENT_DIM = "#5a65cc"
 BORDER = "#333456"
 PROGRESS_BG = "#2a2b4a"
-
 RADIUS = 20
-PAD = 24
 
 
 def load_gif_frames(root, gif_path: Path):
