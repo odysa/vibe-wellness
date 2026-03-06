@@ -2,7 +2,7 @@
 
 Exercise reminder overlay for macOS. Pops up during Claude Code sessions to remind you to move.
 
-![overlay](https://img.shields.io/badge/macOS-overlay-blue) ![python](https://img.shields.io/badge/python-3.12+-green)
+![overlay](https://img.shields.io/badge/macOS-overlay-blue) ![python](https://img.shields.io/badge/python-3.12+-green) ![PyPI](https://img.shields.io/pypi/v/vibe-wellness)
 
 ## What it does
 
@@ -21,25 +21,16 @@ Default exercises (desk-friendly):
 
 ## Install
 
-Requires [uv](https://docs.astral.sh/uv/) and Python 3.12+.
+Requires [uv](https://docs.astral.sh/uv/).
 
 ```bash
-uvx --from git+https://github.com/odysa/vibe-wellness vibe-wellness
+uvx vibe-wellness
 ```
 
 The interactive installer will:
-- Ask your preferred language and reminder interval
-- Clone to `~/.vibe-wellness/`
-- Install dependencies via `uv sync`
+- Ask your preferred language, reminder interval, and exercises
+- Install `vibe-wellness` as a tool via `uv tool install`
 - Add a `UserPromptSubmit` hook to `~/.claude/settings.json`
-
-## Usage
-
-The overlay triggers automatically via Claude Code hooks. You can also test manually:
-
-```bash
-make test
-```
 
 ## Configuration
 
@@ -81,19 +72,19 @@ Drop a `{key}.gif` in `~/.config/vibe-wellness/gifs/` to use your own animation 
 Remove the `vibe-wellness` hook entry from `~/.claude/settings.json`, then:
 
 ```bash
-rm -rf ~/.vibe-wellness ~/.config/vibe-wellness
+uv tool uninstall vibe-wellness
+rm -rf ~/.config/vibe-wellness
 ```
 
 ## Project structure
 
 ```
-vibe_wellness/        # Python package
-  config.py           # Config loading, i18n, language detection
+vibe_wellness/
+  cli.py              # Entry point: install / --show / --overlay
+  installer.py        # Interactive installer with TUI
+  show.py             # Single-instance guard + interval check
   ui.py               # Overlay window (tkinter)
+  config.py           # Config loading, i18n, language detection
   config.json         # Default config + exercises
   gifs/               # Bundled exercise GIFs
-scripts/
-  show.sh             # Launch overlay (interval + single-instance guard)
-  hide.sh             # Kill overlay
-install.sh            # One-step installer
 ```

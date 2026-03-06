@@ -8,10 +8,9 @@ import termios
 import tty
 from pathlib import Path
 
-REPO = "https://github.com/odysa/vibe-wellness.git"
-INSTALL_DIR = Path.home() / ".vibe-wellness"
 CONFIG_DIR = Path.home() / ".config" / "vibe-wellness"
 SETTINGS = Path.home() / ".claude" / "settings.json"
+HOOK_CMD = "vibe-wellness --show"
 
 BOLD = "\033[1m"
 DIM = "\033[2m"
@@ -129,10 +128,9 @@ def main():
     print(f"  {DIM}Exercise reminders for Claude Code{RESET}")
     print()
 
-    for cmd in ("uv", "git"):
-        if not shutil.which(cmd):
-            print(f"{cmd} is required but not found.")
-            sys.exit(1)
+    if not shutil.which("uv"):
+        print("uv is required. Install: curl -LsSf https://astral.sh/uv/install.sh | sh")
+        sys.exit(1)
 
     # Language
     say("Language / 语言")
@@ -153,22 +151,9 @@ def main():
     ], default=1)
     print()
 
-    # Clone / Update
-    say(f"Installing to {INSTALL_DIR}")
-    if (INSTALL_DIR / ".git").is_dir():
-        info("Updating existing installation...")
-        subprocess.run(["git", "-C", str(INSTALL_DIR), "pull", "--quiet"], check=True)
-    else:
-        if INSTALL_DIR.exists():
-            shutil.rmtree(INSTALL_DIR)
-        subprocess.run(["git", "clone", "--quiet", REPO, str(INSTALL_DIR)], check=True)
-
-    # Dependencies
-    say("Installing dependencies")
-    subprocess.run(["uv", "sync", "--project", str(INSTALL_DIR), "--quiet"], check=True)
-
-    # Exercise selection
-    default_config = json.loads((INSTALL_DIR / "vibe_wellness" / "config.json").read_text())
+    # Exercise selection (from bundled config)
+    from .config import PKG_DIR
+    default_config = json.loads((PKG_DIR / "config.json").read_text())
     all_exercises = default_config["exercises"]
     display_key = "zh" if lang == "zh" else "en"
     labels = [ex["name"].get(display_key, ex["name"]["en"]) for ex in all_exercises]
@@ -178,6 +163,13 @@ def main():
     exercises = [all_exercises[i] for i in chosen]
     print()
 
+    # Install via uv tool
+    say("Installing vibe-wellness")
+    subprocess.run(
+        ["uv", "tool", "install", "vibe-wellness", "--python", "3.12", "--force"],
+        check=True,
+    )
+
     # User config
     say("Setting up config")
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -186,23 +178,17 @@ def main():
     (CONFIG_DIR / "config.json").write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n")
     info(f"Wrote {CONFIG_DIR / 'config.json'}")
 
-    # Scripts
-    for script in ["show.sh", "hide.sh"]:
-        (INSTALL_DIR / "scripts" / script).chmod(0o755)
-
     # Claude Code hook
-    hook_cmd = str(INSTALL_DIR / "scripts" / "show.sh")
-
     if not SETTINGS.exists():
         say("Claude Code settings not found")
         info(f"Manually add a UserPromptSubmit hook:")
-        info(f"  command: {hook_cmd}")
+        info(f"  command: {HOOK_CMD}")
     else:
         settings = json.loads(SETTINGS.read_text())
         already = False
         for group in settings.get("hooks", {}).get("UserPromptSubmit", []):
             for h in group.get("hooks", []):
-                if h.get("command") == hook_cmd:
+                if "vibe-wellness" in h.get("command", ""):
                     already = True
                     break
 
@@ -214,7 +200,7 @@ def main():
                 "matcher": "",
                 "hooks": [{
                     "type": "command",
-                    "command": hook_cmd,
+                    "command": HOOK_CMD,
                     "timeout": 15,
                     "async": True,
                 }],
@@ -229,5 +215,5 @@ def main():
     info(f"Reminders will appear every {interval // 60} min during Claude Code sessions.")
     info(f"Config:      {CONFIG_DIR / 'config.json'}")
     info(f"Custom GIFs: {CONFIG_DIR / 'gifs/'}")
-    info(f"Uninstall:   rm -rf {INSTALL_DIR} {CONFIG_DIR}")
+    info(f"Uninstall:   uv tool uninstall vibe-wellness && rm -rf {CONFIG_DIR}")
     print()

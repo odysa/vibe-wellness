@@ -1,10 +1,15 @@
 """Floating exercise reminder overlay for macOS."""
 
+import atexit
 import os
 import random
+import shutil
 import signal
 import sys
 from pathlib import Path
+
+LOCK_DIR = Path("/tmp/vibe-wellness.lock")
+atexit.register(lambda: shutil.rmtree(LOCK_DIR, ignore_errors=True))
 
 # Fix Tcl/Tk paths for venv
 _base = Path(sys.base_prefix) / "lib"
