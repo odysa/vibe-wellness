@@ -24,13 +24,12 @@ Default exercises (desk-friendly):
 Requires [uv](https://docs.astral.sh/uv/) and Python 3.12+.
 
 ```bash
-git clone <repo-url> ~/vibe-wellness
-cd ~/vibe-wellness
-./install.sh
+curl -fsSL https://raw.githubusercontent.com/odysa/vibe-wellness/main/install.sh | bash
 ```
 
-This will:
-- Create `~/.config/vibe-wellness/` with a starter config
+The interactive installer will:
+- Ask your preferred language and reminder interval
+- Clone to `~/.vibe-wellness/`
 - Install dependencies via `uv sync`
 - Add a `UserPromptSubmit` hook to `~/.claude/settings.json`
 
@@ -82,7 +81,7 @@ Drop a `{key}.gif` in `~/.config/vibe-wellness/gifs/` to use your own animation 
 Remove the `vibe-wellness` hook entry from `~/.claude/settings.json`, then:
 
 ```bash
-rm -rf ~/vibe-wellness ~/.config/vibe-wellness
+rm -rf ~/.vibe-wellness ~/.config/vibe-wellness
 ```
 
 ## Project structure
