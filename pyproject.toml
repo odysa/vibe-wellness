@@ -1,6 +1,6 @@
 [project]
 name = "vibe-wellness"
-version = "0.3.2"
+version = "0.3.3"
 description = "Exercise reminder overlay for Claude Code thinking time"
 readme = "README.md"
 license = "MIT"

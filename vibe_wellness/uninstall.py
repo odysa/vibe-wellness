@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 CONFIG_DIR = Path.home() / ".config" / "vibe-wellness"
+HOOK_DIR = Path.home() / ".claude" / "hooks" / "vibe-wellness"
 SETTINGS = Path.home() / ".claude" / "settings.json"
 
 BOLD = "\033[1m"
@@ -50,6 +51,12 @@ def main():
             info("Removed hooks from settings.json")
         else:
             info("No hooks found")
+
+    # Remove hook script
+    if HOOK_DIR.exists():
+        say("Removing hook script")
+        shutil.rmtree(HOOK_DIR)
+        info(f"Removed {HOOK_DIR}")
 
     # Remove config
     if CONFIG_DIR.exists():

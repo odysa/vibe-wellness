@@ -10,8 +10,10 @@ from pathlib import Path
 
 CONFIG_DIR = Path.home() / ".config" / "vibe-wellness"
 SETTINGS = Path.home() / ".claude" / "settings.json"
+HOOK_DIR = Path.home() / ".claude" / "hooks" / "vibe-wellness"
+HOOK_SCRIPT = HOOK_DIR / "show.sh"
 BIN_PATH = Path.home() / ".local" / "bin" / "vibe-wellness"
-HOOK_CMD = str(BIN_PATH) + " --show"
+HOOK_CMD = str(HOOK_SCRIPT)
 
 
 def hook_installed(event):
@@ -287,6 +289,14 @@ def main():
             check=True,
         )
         print()
+
+    # Create hook script
+    HOOK_DIR.mkdir(parents=True, exist_ok=True)
+    HOOK_SCRIPT.write_text(
+        f"#!/bin/bash\n"
+        f"{BIN_PATH} --show\n"
+    )
+    HOOK_SCRIPT.chmod(0o755)
 
     # User config
     say(t["config"])
