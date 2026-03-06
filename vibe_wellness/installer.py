@@ -135,7 +135,10 @@ def select(options, default=0):
         for i, (label, _) in enumerate(options):
             marker = ">" if i == default else " "
             print(f"  {marker} {label}")
-        choice = input(f"  [{default + 1}]: ").strip()
+        try:
+            choice = input(f"  [{default + 1}]: ").strip()
+        except EOFError:
+            return options[default][1]
         try:
             return options[int(choice) - 1][1]
         except (ValueError, IndexError):
@@ -179,7 +182,10 @@ def multiselect(options, selected=None):
         for i, label in enumerate(options):
             check = "*" if i in selected else " "
             print(f"  [{check}] {i + 1}. {label}")
-        choice = input(f"  Toggle (e.g. 1,3) or enter for all: ").strip()
+        try:
+            choice = input(f"  Toggle (e.g. 1,3) or enter for all: ").strip()
+        except EOFError:
+            return sorted(selected)
         if choice:
             for num in choice.split(","):
                 try:
@@ -227,6 +233,20 @@ def main():
     print()
     print(f"{BOLD}  vibe-wellness setup{RESET}")
     print()
+
+    # Install binary if not already present (e.g. running via uvx)
+    if not BIN_PATH.exists():
+        if shutil.which("uv"):
+            say("Installing vibe-wellness")
+            subprocess.run(
+                ["uv", "tool", "install", "vibe-wellness", "--force", "--no-cache"],
+                check=True,
+            )
+            print()
+        if not BIN_PATH.exists():
+            print(f"  \033[31m{BIN_PATH} not found after install.\033[0m")
+            print(f"  Run manually: uv tool install vibe-wellness")
+            print()
 
     # Language (always bilingual)
     say("Language / 语言")
@@ -280,15 +300,6 @@ def main():
     hook_options = HOOKS.get(display_lang, HOOKS["en"])
     hook_event = select(hook_options, default=0)
     print()
-
-    # Install binary if not already present (e.g. running via uvx)
-    if not BIN_PATH.exists() and shutil.which("uv"):
-        say(t.get("installing", "Installing vibe-wellness"))
-        subprocess.run(
-            ["uv", "tool", "install", "vibe-wellness", "--force"],
-            check=True,
-        )
-        print()
 
     # Create hook script
     HOOK_DIR.mkdir(parents=True, exist_ok=True)
