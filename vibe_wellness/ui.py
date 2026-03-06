@@ -24,9 +24,18 @@ import tkinter as tk
 
 from .config import STRINGS, detect_system_lang, load_config, resolve_gif
 
-BG = "#1e1e2e"
-FG = "#e0e0f0"
-DIM = "#888899"
+# Colors — soft dark theme
+BG = "#1a1b2e"
+CARD = "#242540"
+FG = "#e8e8f0"
+DIM = "#6e6e8a"
+ACCENT = "#7c8aff"
+ACCENT_DIM = "#5a65cc"
+BORDER = "#333456"
+PROGRESS_BG = "#2a2b4a"
+
+RADIUS = 20
+PAD = 24
 
 
 def load_gif_frames(root, gif_path: Path):
@@ -41,24 +50,20 @@ def load_gif_frames(root, gif_path: Path):
     return frames
 
 
-def label(parent, text, size=16, color=FG, bold=False, **pack_kw):
-    weight = "bold" if bold else ""
-    lbl = tk.Label(parent, text=text, font=("SF Pro", size, weight), fg=color, bg=BG)
-    lbl.pack(**pack_kw)
-    return lbl
+def rounded_rect(canvas, x1, y1, x2, y2, r, **kw):
+    """Draw a rounded rectangle on a canvas."""
+    points = [
+        x1 + r, y1, x1 + r, y1, x2 - r, y1, x2 - r, y1,
+        x2, y1, x2, y1 + r, x2, y1 + r, x2, y2 - r,
+        x2, y2 - r, x2, y2, x2 - r, y2, x2 - r, y2,
+        x1 + r, y2, x1 + r, y2, x1, y2, x1, y2 - r,
+        x1, y2 - r, x1, y1 + r, x1, y1 + r, x1, y1,
+    ]
+    return canvas.create_polygon(points, smooth=True, **kw)
 
 
-def create_window(cfg, has_gif):
-    root = tk.Tk()
-    root.title("")
-    root.overrideredirect(True)
-    root.attributes("-topmost", True)
-    root.configure(bg=BG)
-
-    w = cfg.get("window_width", 420)
-    h = cfg.get("window_height_gif", 520) if has_gif else cfg.get("window_height_no_gif", 280)
-
-    # Get main display size via CoreGraphics (handles multi-monitor)
+def get_main_display_size(root):
+    """Get main display size via CoreGraphics (handles multi-monitor)."""
     try:
         import ctypes, ctypes.util
         cg = ctypes.cdll.LoadLibrary(ctypes.util.find_library("CoreGraphics"))
@@ -74,11 +79,22 @@ def create_window(cfg, has_gif):
         cg.CGDisplayBounds.restype = CGRect
         cg.CGDisplayBounds.argtypes = [ctypes.c_uint32]
         rect = cg.CGDisplayBounds(cg.CGMainDisplayID())
-        sw, sh = int(rect.size.width), int(rect.size.height)
+        return int(rect.size.width), int(rect.size.height)
     except Exception:
-        sw = root.winfo_screenwidth()
-        sh = root.winfo_screenheight()
+        return root.winfo_screenwidth(), root.winfo_screenheight()
 
+
+def create_window(cfg, has_gif):
+    root = tk.Tk()
+    root.title("")
+    root.overrideredirect(True)
+    root.attributes("-topmost", True)
+    root.configure(bg=BG)
+
+    w = cfg.get("window_width", 400)
+    h = cfg.get("window_height_gif", 500) if has_gif else cfg.get("window_height_no_gif", 260)
+
+    sw, sh = get_main_display_size(root)
     x = (sw - w) // 2
     y = (sh - h) // 2
     # Set size first, then position after update — fixes overrideredirect on macOS
@@ -87,11 +103,11 @@ def create_window(cfg, has_gif):
     root.geometry(f"+{x}+{y}")
 
     try:
-        root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "noTitleBar")
+        root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "none")
     except tk.TclError:
         pass
 
-    return root
+    return root, w, h
 
 
 def main():
@@ -106,8 +122,9 @@ def main():
     gif_path = resolve_gif(ex["key"])
     has_gif = gif_path is not None
 
-    root = create_window(cfg, has_gif)
-    opacity = cfg.get("opacity", 0.92)
+    root, win_w, win_h = create_window(cfg, has_gif)
+    opacity = cfg.get("opacity", 0.95)
+    duration = cfg.get("duration", 30)
     root.attributes("-alpha", 0.0)
 
     def dismiss(event=None):
@@ -116,25 +133,45 @@ def main():
     root.bind("<Button-1>", dismiss)
     signal.signal(signal.SIGTERM, lambda *_: dismiss())
 
-    # Countdown phase
-    cd_frame = tk.Frame(root, bg=BG)
-    cd_frame.pack(fill="both", expand=True)
-    label(cd_frame, strings["title"], size=16, color=DIM, pady=(60, 8))
-    label(cd_frame, name, size=28, bold=True, pady=(0, 20))
-    cd_num = label(cd_frame, "3", size=72, bold=True, color=DIM, expand=True)
+    # Background canvas with rounded rect
+    bg_canvas = tk.Canvas(root, width=win_w, height=win_h, bg=BG,
+                          highlightthickness=0, bd=0)
+    bg_canvas.place(x=0, y=0, relwidth=1, relheight=1)
+    rounded_rect(bg_canvas, 4, 4, win_w - 4, win_h - 4, RADIUS,
+                 fill=CARD, outline=BORDER, width=1.5)
+
+    # --- Countdown phase ---
+    cd_frame = tk.Frame(root, bg=CARD)
+    cd_frame.place(relx=0.5, rely=0.5, anchor="center")
+
+    # Subtitle
+    tk.Label(cd_frame, text=strings["title"], font=("SF Pro", 14),
+             fg=ACCENT, bg=CARD).pack(pady=(40, 6))
+
+    # Exercise name
+    tk.Label(cd_frame, text=name, font=("SF Pro", 26, "bold"),
+             fg=FG, bg=CARD).pack(pady=(0, 24))
+
+    # Countdown number
+    cd_num = tk.Label(cd_frame, text="3", font=("SF Pro", 64, "bold"),
+                      fg=DIM, bg=CARD)
+    cd_num.pack(pady=(0, 40))
 
     def show_exercise():
         cd_frame.destroy()
-        frame = tk.Frame(root, bg=BG, padx=30, pady=20)
-        frame.pack(fill="both", expand=True)
 
-        label(frame, strings["title"], size=16, color=DIM, pady=(8, 4))
+        frame = tk.Frame(root, bg=CARD)
+        frame.place(relx=0.5, rely=0.5, anchor="center")
+
+        # Title
+        tk.Label(frame, text=strings["title"], font=("SF Pro", 14),
+                 fg=ACCENT, bg=CARD).pack(pady=(16, 4))
 
         if has_gif:
             gif_frames = load_gif_frames(root, gif_path)
             if gif_frames:
-                gif_label = tk.Label(frame, bg=BG)
-                gif_label.pack(pady=(8, 4))
+                gif_label = tk.Label(frame, bg=CARD, bd=0)
+                gif_label.pack(pady=(8, 8))
                 idx = [0]
                 speed = cfg.get("gif_speed", 140)
 
@@ -145,11 +182,40 @@ def main():
 
                 animate()
         else:
-            label(frame, "\U0001f3cb\ufe0f", size=56, pady=(4, 0))
+            tk.Label(frame, text="\U0001f3cb\ufe0f", font=("SF Pro", 52),
+                     bg=CARD).pack(pady=(8, 4))
 
-        label(frame, name, size=28, bold=True, pady=(4, 0))
-        label(frame, strings["dismiss"], size=13, color="#777788", pady=(10, 0))
-        root.after(cfg.get("duration", 30) * 1000, dismiss)
+        # Exercise name
+        tk.Label(frame, text=name, font=("SF Pro", 24, "bold"),
+                 fg=FG, bg=CARD).pack(pady=(4, 8))
+
+        # Progress bar
+        bar_w = 200
+        bar_h = 4
+        bar_canvas = tk.Canvas(frame, width=bar_w, height=bar_h,
+                               bg=CARD, highlightthickness=0, bd=0)
+        bar_canvas.pack(pady=(8, 4))
+        bar_canvas.create_rectangle(0, 0, bar_w, bar_h, fill=PROGRESS_BG, outline="")
+        bar_fill = bar_canvas.create_rectangle(0, 0, bar_w, bar_h,
+                                               fill=ACCENT, outline="")
+
+        elapsed = [0]
+        total_ms = duration * 1000
+
+        def tick_bar():
+            elapsed[0] += 50
+            frac = max(0, 1 - elapsed[0] / total_ms)
+            bar_canvas.coords(bar_fill, 0, 0, bar_w * frac, bar_h)
+            if elapsed[0] < total_ms:
+                root.after(50, tick_bar)
+
+        tick_bar()
+
+        # Dismiss hint
+        tk.Label(frame, text=strings["dismiss"], font=("SF Pro", 12),
+                 fg=DIM, bg=CARD).pack(pady=(8, 16))
+
+        root.after(total_ms, dismiss)
 
     def countdown(n=3):
         if n <= 0:
