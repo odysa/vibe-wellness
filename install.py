@@ -13,6 +13,8 @@ import os
 import shutil
 import subprocess
 import sys
+import termios
+import tty
 from pathlib import Path
 
 REPO = "https://github.com/odysa/vibe-wellness.git"
@@ -34,16 +36,60 @@ def info(msg):
     print(f"  {DIM}{msg}{RESET}")
 
 
-def ask(prompt, options, default):
-    for i, (label, _) in enumerate(options, 1):
-        print(f"  {i}) {label}")
-    print()
-    choice = input(f"  {prompt} [{default}]: ").strip()
+CYAN = "\033[36m"
+UP = "\033[A"
+CLEAR_LINE = "\033[2K"
+
+
+def read_key():
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
     try:
-        idx = int(choice) - 1
-        return options[idx][1]
-    except (ValueError, IndexError):
-        return options[default - 1][1]
+        tty.setraw(fd)
+        ch = sys.stdin.read(1)
+        if ch == "\x1b":
+            ch += sys.stdin.read(2)
+        return ch
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+
+
+def select(options, default=0):
+    cur = default
+    n = len(options)
+
+    def draw():
+        for i, (label, _) in enumerate(options):
+            marker = f"{CYAN}>{RESET}" if i == cur else " "
+            style = BOLD if i == cur else DIM
+            print(f"  {marker} {style}{label}{RESET}")
+
+    draw()
+    while True:
+        key = read_key()
+        if key == "\x1b[A":  # up
+            cur = (cur - 1) % n
+        elif key == "\x1b[B":  # down
+            cur = (cur + 1) % n
+        elif key in ("\r", "\n"):  # enter
+            # Move cursor up and redraw with selection
+            sys.stdout.write(f"{UP}{CLEAR_LINE}" * n)
+            sys.stdout.flush()
+            for i, (label, _) in enumerate(options):
+                if i == cur:
+                    print(f"  {CYAN}>{RESET} {BOLD}{label}{RESET}")
+                else:
+                    print(f"    {DIM}{label}{RESET}")
+            return options[cur][1]
+        elif key in ("\x03", "\x04"):  # ctrl-c / ctrl-d
+            print()
+            sys.exit(0)
+        else:
+            continue
+        # Redraw
+        sys.stdout.write(f"{UP}{CLEAR_LINE}" * n)
+        sys.stdout.flush()
+        draw()
 
 
 def main():
@@ -62,21 +108,21 @@ def main():
 
     # Language
     say("Language / 语言")
-    lang = ask("Choose", [
+    lang = select([
         ("English", "en"),
         ("中文", "zh"),
         ("Auto-detect", "auto"),
-    ], default=3)
+    ], default=2)
     print()
 
     # Interval
     say("Reminder interval")
-    interval = ask("Choose", [
+    interval = select([
         ("10 min", 600),
-        ("15 min (default)", 900),
+        ("15 min", 900),
         ("20 min", 1200),
         ("30 min", 1800),
-    ], default=2)
+    ], default=1)
     print()
 
     # Clone / Update
