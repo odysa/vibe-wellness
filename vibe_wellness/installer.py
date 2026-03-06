@@ -12,6 +12,17 @@ CONFIG_DIR = Path.home() / ".config" / "vibe-wellness"
 SETTINGS = Path.home() / ".claude" / "settings.json"
 HOOK_CMD = "vibe-wellness --show"
 
+
+def hook_installed(event):
+    if not SETTINGS.exists():
+        return False
+    settings = json.loads(SETTINGS.read_text())
+    for group in settings.get("hooks", {}).get(event, []):
+        for h in group.get("hooks", []):
+            if "vibe-wellness" in h.get("command", ""):
+                return True
+    return False
+
 BOLD = "\033[1m"
 DIM = "\033[2m"
 GREEN = "\033[32m"
@@ -34,7 +45,12 @@ I18N = {
         "hook_added": "Added hook",
         "hook_not_found": "Claude Code settings not found",
         "hook_manual": "Manually add a hook with command:",
-        "done": "Done!",
+        "verify": "Verifying setup",
+        "check_tool": "vibe-wellness command available",
+        "check_config": "Config file exists",
+        "check_hook": "Claude Code hook registered ({})",
+        "done": "All good! Ready to go.",
+        "done_partial": "Installed with warnings — check above.",
         "remind_every": "Reminders will appear every {} min during Claude Code sessions.",
         "uninstall": "Uninstall: vibe-wellness --uninstall",
     },
@@ -51,7 +67,12 @@ I18N = {
         "hook_added": "已添加钩子",
         "hook_not_found": "未找到 Claude Code 配置",
         "hook_manual": "请手动添加钩子命令：",
-        "done": "完成！",
+        "verify": "验证安装",
+        "check_tool": "vibe-wellness 命令可用",
+        "check_config": "配置文件已创建",
+        "check_hook": "Claude Code 钩子已注册 ({})",
+        "done": "一切就绪！",
+        "done_partial": "安装完成，但有警告 — 请检查上方信息。",
         "remind_every": "每 {} 分钟在 Claude Code 中提醒运动。",
         "uninstall": "卸载：vibe-wellness --uninstall",
     },
@@ -303,9 +324,26 @@ def main():
             SETTINGS.write_text(json.dumps(settings, indent=2) + "\n")
             info(f"{t['hook_added']} ({hook_event})")
 
+    # Verify
+    say(t["verify"])
+    checks = [
+        (shutil.which("vibe-wellness") is not None, t["check_tool"]),
+        ((CONFIG_DIR / "config.json").exists(), t["check_config"]),
+        (hook_installed(hook_event), t["check_hook"].format(hook_event)),
+    ]
+    all_ok = True
+    for ok, label in checks:
+        mark = f"{GREEN}*{RESET}" if ok else f"\033[31mx{RESET}"
+        print(f"  [{mark}] {label}")
+        if not ok:
+            all_ok = False
+
     # Done
     print()
-    print(f"{BOLD}{GREEN}  {t['done']}{RESET}")
+    if all_ok:
+        print(f"{BOLD}{GREEN}  {t['done']}{RESET}")
+    else:
+        print(f"{BOLD}\033[31m  {t['done_partial']}{RESET}")
     print()
     info(t["remind_every"].format(interval // 60))
     info(f"Config: {CONFIG_DIR / 'config.json'}")
