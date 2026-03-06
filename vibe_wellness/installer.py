@@ -249,7 +249,13 @@ def main():
         ("15 min", 900),
         ("20 min", 1200),
         ("30 min", 1800),
+        ("Custom / 自定义", "custom"),
     ], default=1)
+    if interval == "custom":
+        try:
+            interval = int(input(f"  {DIM}Seconds / 秒: {RESET}").strip())
+        except (ValueError, EOFError):
+            interval = 900
     print()
 
     # Exercise selection

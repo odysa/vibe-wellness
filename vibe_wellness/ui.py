@@ -55,8 +55,30 @@ def create_window(cfg, has_gif):
 
     w = cfg.get("window_width", 420)
     h = cfg.get("window_height_gif", 520) if has_gif else cfg.get("window_height_no_gif", 280)
-    x = (root.winfo_screenwidth() - w) // 2
-    y = (root.winfo_screenheight() - h) // 2
+
+    # Get main display size via CoreGraphics (handles multi-monitor)
+    try:
+        import ctypes, ctypes.util
+        cg = ctypes.cdll.LoadLibrary(ctypes.util.find_library("CoreGraphics"))
+
+        class CGRect(ctypes.Structure):
+            class CGPoint(ctypes.Structure):
+                _fields_ = [("x", ctypes.c_double), ("y", ctypes.c_double)]
+            class CGSize(ctypes.Structure):
+                _fields_ = [("width", ctypes.c_double), ("height", ctypes.c_double)]
+            _fields_ = [("origin", CGPoint), ("size", CGSize)]
+
+        cg.CGMainDisplayID.restype = ctypes.c_uint32
+        cg.CGDisplayBounds.restype = CGRect
+        cg.CGDisplayBounds.argtypes = [ctypes.c_uint32]
+        rect = cg.CGDisplayBounds(cg.CGMainDisplayID())
+        sw, sh = int(rect.size.width), int(rect.size.height)
+    except Exception:
+        sw = root.winfo_screenwidth()
+        sh = root.winfo_screenheight()
+
+    x = (sw - w) // 2
+    y = (sh - h) // 2
     root.geometry(f"{w}x{h}+{x}+{y}")
 
     try:
