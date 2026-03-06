@@ -20,6 +20,23 @@ for _prefix, _var in [("tcl", "TCL_LIBRARY"), ("tk", "TK_LIBRARY")]:
             os.environ.setdefault(_var, str(_p))
             break
 
+# Hide dock icon and menu bar (NSApplication accessory mode)
+try:
+    import ctypes, ctypes.util
+    _objc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("objc"))
+    _objc.objc_getClass.restype = ctypes.c_void_p
+    _objc.sel_registerName.restype = ctypes.c_void_p
+    _objc.objc_msgSend.restype = ctypes.c_void_p
+    _objc.objc_msgSend.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+    _app = _objc.objc_msgSend(
+        _objc.objc_getClass(b"NSApplication"),
+        _objc.sel_registerName(b"sharedApplication"),
+    )
+    _objc.objc_msgSend.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int64]
+    _objc.objc_msgSend(_app, _objc.sel_registerName(b"setActivationPolicy:"), 1)
+except Exception:
+    pass
+
 import tkinter as tk
 
 from .config import STRINGS, detect_system_lang, load_config, resolve_gif
