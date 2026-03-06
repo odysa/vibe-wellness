@@ -20,6 +20,56 @@ RESET = "\033[0m"
 UP = "\033[A"
 CLEAR_LINE = "\033[2K"
 
+I18N = {
+    "en": {
+        "subtitle": "Exercise reminders for Claude Code",
+        "interval": "Reminder interval",
+        "exercises": "Exercises",
+        "installing": "Installing vibe-wellness",
+        "config": "Setting up config",
+        "wrote": "Wrote",
+        "hook_title": "Claude Code hook",
+        "hook_pick": "When should reminders appear?",
+        "hook_already": "Hook already installed, skipping",
+        "hook_added": "Added hook",
+        "hook_not_found": "Claude Code settings not found",
+        "hook_manual": "Manually add a hook with command:",
+        "done": "Done!",
+        "remind_every": "Reminders will appear every {} min during Claude Code sessions.",
+        "uninstall": "Uninstall: vibe-wellness --uninstall",
+    },
+    "zh": {
+        "subtitle": "Claude Code 运动提醒",
+        "interval": "提醒间隔",
+        "exercises": "运动项目",
+        "installing": "安装 vibe-wellness",
+        "config": "配置",
+        "wrote": "已写入",
+        "hook_title": "Claude Code 钩子",
+        "hook_pick": "什么时候提醒？",
+        "hook_already": "钩子已安装，跳过",
+        "hook_added": "已添加钩子",
+        "hook_not_found": "未找到 Claude Code 配置",
+        "hook_manual": "请手动添加钩子命令：",
+        "done": "完成！",
+        "remind_every": "每 {} 分钟在 Claude Code 中提醒运动。",
+        "uninstall": "卸载：vibe-wellness --uninstall",
+    },
+}
+
+HOOKS = {
+    "en": [
+        ("UserPromptSubmit — When you send a message (while Claude thinks)", "UserPromptSubmit"),
+        ("Stop — When Claude finishes responding", "Stop"),
+        ("Notification — When Claude sends a notification", "Notification"),
+    ],
+    "zh": [
+        ("UserPromptSubmit — 发送消息时（Claude 思考时）", "UserPromptSubmit"),
+        ("Stop — Claude 回复完成时", "Stop"),
+        ("Notification — Claude 发送通知时", "Notification"),
+    ],
+}
+
 
 def say(msg):
     print(f"{BOLD}{GREEN}==>{RESET} {BOLD}{msg}{RESET}")
@@ -125,24 +175,34 @@ def multiselect(options, selected=None):
 def main():
     print()
     print(f"{BOLD}  vibe-wellness installer{RESET}")
-    print(f"  {DIM}Exercise reminders for Claude Code{RESET}")
     print()
 
     if not shutil.which("uv"):
         print("uv is required. Install: curl -LsSf https://astral.sh/uv/install.sh | sh")
         sys.exit(1)
 
-    # Language
+    # Language (always bilingual)
     say("Language / 语言")
     lang = select([
         ("English", "en"),
         ("中文", "zh"),
-        ("Auto-detect", "auto"),
+        ("Auto-detect / 自动检测", "auto"),
     ], default=2)
+
+    # Resolve display language
+    if lang == "auto":
+        from .config import detect_system_lang
+        display_lang = detect_system_lang()
+    else:
+        display_lang = lang
+    t = I18N.get(display_lang, I18N["en"])
+
+    print()
+    info(t["subtitle"])
     print()
 
     # Interval
-    say("Reminder interval")
+    say(t["interval"])
     interval = select([
         ("10 min", 600),
         ("15 min", 900),
@@ -151,52 +211,58 @@ def main():
     ], default=1)
     print()
 
-    # Exercise selection (from bundled config)
+    # Exercise selection
     from .config import PKG_DIR
     default_config = json.loads((PKG_DIR / "config.json").read_text())
     all_exercises = default_config["exercises"]
-    display_key = "zh" if lang == "zh" else "en"
-    labels = [ex["name"].get(display_key, ex["name"]["en"]) for ex in all_exercises]
+    labels = [ex["name"].get(display_lang, ex["name"]["en"]) for ex in all_exercises]
 
-    say("Exercises")
+    say(t["exercises"])
     chosen = multiselect(labels)
     exercises = [all_exercises[i] for i in chosen]
     print()
 
+    # Hook selection
+    say(t["hook_pick"])
+    hook_options = HOOKS.get(display_lang, HOOKS["en"])
+    hook_event = select(hook_options, default=0)
+    print()
+
     # Install via uv tool
-    say("Installing vibe-wellness")
+    say(t["installing"])
     subprocess.run(
         ["uv", "tool", "install", "vibe-wellness", "--python", "3.12", "--force"],
         check=True,
     )
+    print()
 
     # User config
-    say("Setting up config")
+    say(t["config"])
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "gifs").mkdir(exist_ok=True)
     config = {"lang": lang, "interval": interval, "exercises": exercises}
     (CONFIG_DIR / "config.json").write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n")
-    info(f"Wrote {CONFIG_DIR / 'config.json'}")
+    info(f"{t['wrote']} {CONFIG_DIR / 'config.json'}")
 
     # Claude Code hook
+    say(t["hook_title"])
     if not SETTINGS.exists():
-        say("Claude Code settings not found")
-        info(f"Manually add a UserPromptSubmit hook:")
-        info(f"  command: {HOOK_CMD}")
+        info(t["hook_not_found"])
+        info(f"{t['hook_manual']} {HOOK_CMD}")
     else:
         settings = json.loads(SETTINGS.read_text())
         already = False
-        for group in settings.get("hooks", {}).get("UserPromptSubmit", []):
+        for group in settings.get("hooks", {}).get(hook_event, []):
             for h in group.get("hooks", []):
                 if "vibe-wellness" in h.get("command", ""):
                     already = True
                     break
 
         if already:
-            info("Hook already installed, skipping")
+            info(t["hook_already"])
         else:
             hooks = settings.setdefault("hooks", {})
-            hooks.setdefault("UserPromptSubmit", []).append({
+            hooks.setdefault(hook_event, []).append({
                 "matcher": "",
                 "hooks": [{
                     "type": "command",
@@ -206,14 +272,13 @@ def main():
                 }],
             })
             SETTINGS.write_text(json.dumps(settings, indent=2) + "\n")
-            info("Added UserPromptSubmit hook")
+            info(f"{t['hook_added']} ({hook_event})")
 
     # Done
     print()
-    print(f"{BOLD}{GREEN}  Done!{RESET}")
+    print(f"{BOLD}{GREEN}  {t['done']}{RESET}")
     print()
-    info(f"Reminders will appear every {interval // 60} min during Claude Code sessions.")
-    info(f"Config:      {CONFIG_DIR / 'config.json'}")
-    info(f"Custom GIFs: {CONFIG_DIR / 'gifs/'}")
-    info(f"Uninstall:   uv tool uninstall vibe-wellness && rm -rf {CONFIG_DIR}")
+    info(t["remind_every"].format(interval // 60))
+    info(f"Config: {CONFIG_DIR / 'config.json'}")
+    info(t["uninstall"])
     print()
