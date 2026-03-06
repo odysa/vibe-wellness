@@ -21,7 +21,11 @@ Default exercises (desk-friendly):
 
 ## Install
 
-Requires [uv](https://docs.astral.sh/uv/).
+```bash
+curl -fsSL https://raw.githubusercontent.com/odysa/vibe-wellness/main/install.sh | bash
+```
+
+Or if you already have [uv](https://docs.astral.sh/uv/):
 
 ```bash
 uvx vibe-wellness
