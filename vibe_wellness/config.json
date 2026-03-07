@@ -1,0 +1,17 @@
+{
+  "lang": "auto",
+  "interval": 900,
+  "duration": 30,
+  "gif_speed": 140,
+  "window_width": 420,
+  "window_height_gif": 520,
+  "window_height_no_gif": 280,
+  "opacity": 0.92,
+  "exercises": [
+    { "key": "kegels", "name": { "en": "Kegels", "zh": "提肛" } },
+    { "key": "drink_water", "name": { "en": "Drink Water", "zh": "喝水" } },
+    { "key": "squats", "name": { "en": "Squats", "zh": "深蹲" } },
+    { "key": "wall_pushups", "name": { "en": "Wall Push-ups", "zh": "靠墙俯卧撑" } },
+    { "key": "neck_rolls", "name": { "en": "Neck Rolls", "zh": "颈椎运动" } }
+  ]
+}

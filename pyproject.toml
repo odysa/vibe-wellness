@@ -1,0 +1,26 @@
+[project]
+name = "vibe-wellness"
+version = "0.2.5"
+description = "Exercise reminder overlay for Claude Code thinking time"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = []
+authors = [{ name = "Chengxu Bian", email = "cbian564@gmail.com" }]
+keywords = ["claude-code", "exercise", "reminder", "overlay", "macos"]
+classifiers = [
+    "Operating System :: MacOS",
+    "Environment :: MacOS X",
+    "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/odysa/vibe-wellness"
+Repository = "https://github.com/odysa/vibe-wellness"
+
+[project.scripts]
+vibe-wellness = "vibe_wellness.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
