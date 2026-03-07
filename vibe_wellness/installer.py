@@ -295,8 +295,14 @@ def main():
         ("30 min", 30),
         ("45 min", 45),
         ("60 min", 60),
+        ("Custom / 自定义", "custom"),
         ("Off / 关闭", 0),
     ], default=1)
+    if sed_interval == "custom":
+        try:
+            sed_interval = int(input(f"  {DIM}Minutes / 分钟: {RESET}").strip())
+        except (ValueError, EOFError):
+            sed_interval = 30
     print()
 
     # Exercise selection
