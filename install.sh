@@ -13,7 +13,7 @@ if ! command -v uv &>/dev/null; then
 fi
 
 # 2. Install the package (--no-cache to get latest version)
-uv tool install vibe-wellness --force --no-cache
+uv tool install vibe-wellness@latest --force --no-cache
 
 # 3. Verify the binary is accessible
 if ! command -v vibe-wellness &>/dev/null; then
