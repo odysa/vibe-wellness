@@ -1,16 +1,14 @@
 # vibe-wellness
 
+[![PyPI](https://img.shields.io/pypi/v/vibe-wellness)](https://pypi.org/project/vibe-wellness/) [![Publish](https://github.com/odysa/vibe-wellness/actions/workflows/publish.yml/badge.svg)](https://github.com/odysa/vibe-wellness/actions/workflows/publish.yml) ![macOS](https://img.shields.io/badge/macOS-overlay-blue) ![python](https://img.shields.io/badge/python-3.12+-green)
+
 [中文](README_zh.md)
+
+**I vibe-code 8+ hours a day. Hours disappear, my back hurts, I forget to drink water. Sound familiar?**
 
 **Your AI pair programmer doesn't need to stretch. You do.**
 
-[![PyPI](https://img.shields.io/pypi/v/vibe-wellness)](https://pypi.org/project/vibe-wellness/) [![Publish](https://github.com/odysa/vibe-wellness/actions/workflows/publish.yml/badge.svg)](https://github.com/odysa/vibe-wellness/actions/workflows/publish.yml) ![macOS](https://img.shields.io/badge/macOS-overlay-blue) ![python](https://img.shields.io/badge/python-3.12+-green)
-
 ![demo](docs/demo_en.gif)
-
-## Why
-
-I vibe-code 8+ hours a day. Hours disappear, my back hurts, I forget to drink water. Sound familiar?
 
 vibe-wellness is a native macOS overlay that hooks directly into Claude Code to remind you to move, stretch, and hydrate — *inside* your workflow, not as notifications you'll ignore.
 
