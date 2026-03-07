@@ -146,7 +146,7 @@ def create_window(cfg, has_gif):
     return root, w, h
 
 
-def _show_overlay(root, win_w, win_h, cfg, title, name, gif_path, dismiss_text, duration, opacity):
+def _show_overlay(root, win_w, win_h, cfg, title, name, gif_path, dismiss_text, duration, opacity, small_name=False):
     """Shared overlay UI for both exercise and sedentary modes."""
     has_gif = gif_path is not None
     root.attributes("-alpha", 0.0)
@@ -171,8 +171,9 @@ def _show_overlay(root, win_w, win_h, cfg, title, name, gif_path, dismiss_text, 
     tk.Label(cd_frame, text=title, font=("SF Pro", 14),
              fg=ACCENT, bg=CARD).pack(pady=(40, 6))
 
-    tk.Label(cd_frame, text=name, font=("SF Pro", 26, "bold"),
-             fg=FG, bg=CARD).pack(pady=(0, 24))
+    name_font = ("SF Pro", 18) if small_name else ("SF Pro", 26, "bold")
+    tk.Label(cd_frame, text=name, font=name_font,
+             fg=FG, bg=CARD, wraplength=win_w - 60, justify="center").pack(pady=(0, 24))
 
     cd_num = tk.Label(cd_frame, text="3", font=("SF Pro", 64, "bold"),
                       fg=DIM, bg=CARD)
@@ -205,8 +206,9 @@ def _show_overlay(root, win_w, win_h, cfg, title, name, gif_path, dismiss_text, 
             tk.Label(frame, text="\U0001f9d8", font=("SF Pro", 52),
                      bg=CARD).pack(pady=(8, 4))
 
-        tk.Label(frame, text=name, font=("SF Pro", 24, "bold"),
-                 fg=FG, bg=CARD).pack(pady=(4, 8))
+        content_name_font = ("SF Pro", 16) if small_name else ("SF Pro", 24, "bold")
+        tk.Label(frame, text=name, font=content_name_font,
+                 fg=FG, bg=CARD, wraplength=win_w - 60, justify="center").pack(pady=(4, 8))
 
         # Progress bar
         bar_w = 200
@@ -269,7 +271,7 @@ def main(sedentary=False):
         gif_path = resolve_gif("sedentary")
         has_gif = gif_path is not None
         root, win_w, win_h = create_window(cfg, has_gif)
-        _show_overlay(root, win_w, win_h, cfg, title, name, gif_path, dismiss_text, duration, opacity)
+        _show_overlay(root, win_w, win_h, cfg, title, name, gif_path, dismiss_text, duration, opacity, small_name=True)
     else:
         strings = STRINGS.get(lang, STRINGS["en"])
         ex = random.choice(cfg["exercises"])
