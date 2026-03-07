@@ -6,7 +6,7 @@
 
 **I vibe-code 8+ hours a day. Hours disappear, my back hurts, I forget to drink water. Sound familiar?**
 
-**Your AI pair programmer doesn't need to stretch. You do.**
+**Claude Code doesn't need to stretch. You do.**
 
 ![demo](docs/demo_en.gif)
 
