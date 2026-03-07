@@ -334,8 +334,12 @@ def main() -> None:
     poses = build_poses()
     frames: list[Image.Image] = [draw_frame(p) for p in poses]
 
-    # Convert to palette mode for GIF
-    palette_frames = [f.convert("P", palette=Image.ADAPTIVE, colors=64) for f in frames]
+    # Build a single global palette from all frames to avoid flicker
+    combined = Image.new("RGB", (WIDTH * len(frames), HEIGHT))
+    for i, f in enumerate(frames):
+        combined.paste(f, (i * WIDTH, 0))
+    global_palette = combined.quantize(colors=64, method=Image.MEDIANCUT)
+    palette_frames = [f.quantize(palette=global_palette, dither=0) for f in frames]
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     palette_frames[0].save(
