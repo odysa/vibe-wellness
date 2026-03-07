@@ -2,21 +2,23 @@
 
 [中文](README_zh.md)
 
-Exercise reminder overlay for macOS. Pops up during Claude Code sessions to remind you to move.
+**Your AI pair programmer doesn't need to stretch. You do.**
 
 [![PyPI](https://img.shields.io/pypi/v/vibe-wellness)](https://pypi.org/project/vibe-wellness/) [![Publish](https://github.com/odysa/vibe-wellness/actions/workflows/publish.yml/badge.svg)](https://github.com/odysa/vibe-wellness/actions/workflows/publish.yml) ![macOS](https://img.shields.io/badge/macOS-overlay-blue) ![python](https://img.shields.io/badge/python-3.12+-green)
 
 ![demo](docs/demo_en.gif)
 
-## What it does
+## Why
 
-A floating overlay window appears periodically when you're using Claude Code:
+I vibe-code 8+ hours a day. Hours disappear, my back hurts, I forget to drink water. Sound familiar?
 
-1. 3-second countdown with exercise name
-2. Animated stick figure GIF showing the exercise
-3. Progress bar + auto-dismiss after 30 seconds (or click to dismiss)
+vibe-wellness is a native macOS overlay that hooks directly into Claude Code to remind you to move, stretch, and hydrate — *inside* your workflow, not as notifications you'll ignore.
 
-## Install
+- 3-second countdown with exercise name
+- Animated stick figure GIF showing the exercise
+- Progress bar + auto-dismiss after 30 seconds (or click to dismiss)
+
+## 30-second setup
 
 One-liner:
 
