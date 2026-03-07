@@ -62,7 +62,7 @@ def _make_borderless():
 
 import tkinter as tk
 
-from .config import STRINGS, detect_system_lang, load_config, resolve_gif
+from .config import SEDENTARY_STRINGS, STRINGS, detect_system_lang, load_config, resolve_gif
 
 # Colors — soft dark theme
 BG = "#1a1b2e"
@@ -146,21 +146,9 @@ def create_window(cfg, has_gif):
     return root, w, h
 
 
-def main():
-    cfg = load_config()
-    lang = cfg.get("lang", "auto")
-    if lang == "auto":
-        lang = detect_system_lang()
-    strings = STRINGS.get(lang, STRINGS["en"])
-
-    ex = random.choice(cfg["exercises"])
-    name = ex["name"].get(lang, ex["name"]["en"])
-    gif_path = resolve_gif(ex["key"])
+def _show_overlay(root, win_w, win_h, cfg, title, name, gif_path, dismiss_text, duration, opacity):
+    """Shared overlay UI for both exercise and sedentary modes."""
     has_gif = gif_path is not None
-
-    root, win_w, win_h = create_window(cfg, has_gif)
-    opacity = cfg.get("opacity", 0.95)
-    duration = cfg.get("duration", 30)
     root.attributes("-alpha", 0.0)
 
     def dismiss(event=None):
@@ -180,27 +168,23 @@ def main():
     cd_frame = tk.Frame(root, bg=CARD)
     cd_frame.place(relx=0.5, rely=0.5, anchor="center")
 
-    # Subtitle
-    tk.Label(cd_frame, text=strings["title"], font=("SF Pro", 14),
+    tk.Label(cd_frame, text=title, font=("SF Pro", 14),
              fg=ACCENT, bg=CARD).pack(pady=(40, 6))
 
-    # Exercise name
     tk.Label(cd_frame, text=name, font=("SF Pro", 26, "bold"),
              fg=FG, bg=CARD).pack(pady=(0, 24))
 
-    # Countdown number
     cd_num = tk.Label(cd_frame, text="3", font=("SF Pro", 64, "bold"),
                       fg=DIM, bg=CARD)
     cd_num.pack(pady=(0, 40))
 
-    def show_exercise():
+    def show_content():
         cd_frame.destroy()
 
         frame = tk.Frame(root, bg=CARD)
         frame.place(relx=0.5, rely=0.5, anchor="center")
 
-        # Title
-        tk.Label(frame, text=strings["title"], font=("SF Pro", 14),
+        tk.Label(frame, text=title, font=("SF Pro", 14),
                  fg=ACCENT, bg=CARD).pack(pady=(16, 4))
 
         if has_gif:
@@ -218,10 +202,9 @@ def main():
 
                 animate()
         else:
-            tk.Label(frame, text="\U0001f3cb\ufe0f", font=("SF Pro", 52),
+            tk.Label(frame, text="\U0001f9d8", font=("SF Pro", 52),
                      bg=CARD).pack(pady=(8, 4))
 
-        # Exercise name
         tk.Label(frame, text=name, font=("SF Pro", 24, "bold"),
                  fg=FG, bg=CARD).pack(pady=(4, 8))
 
@@ -247,15 +230,14 @@ def main():
 
         tick_bar()
 
-        # Dismiss hint
-        tk.Label(frame, text=strings["dismiss"], font=("SF Pro", 12),
+        tk.Label(frame, text=dismiss_text, font=("SF Pro", 12),
                  fg=DIM, bg=CARD).pack(pady=(8, 16))
 
         root.after(total_ms, dismiss)
 
     def countdown(n=3):
         if n <= 0:
-            show_exercise()
+            show_content()
         else:
             cd_num.configure(text=str(n))
             root.after(1000, countdown, n - 1)
@@ -269,3 +251,30 @@ def main():
 
     fade_in()
     root.mainloop()
+
+
+def main(sedentary=False):
+    cfg = load_config()
+    lang = cfg.get("lang", "auto")
+    if lang == "auto":
+        lang = detect_system_lang()
+    opacity = cfg.get("opacity", 0.95)
+    duration = cfg.get("duration", 30)
+
+    if sedentary:
+        sed_strings = SEDENTARY_STRINGS.get(lang, SEDENTARY_STRINGS["en"])
+        title = sed_strings["title"]
+        name = sed_strings["message"]
+        dismiss_text = sed_strings["dismiss"]
+        gif_path = resolve_gif("sedentary")
+        has_gif = gif_path is not None
+        root, win_w, win_h = create_window(cfg, has_gif)
+        _show_overlay(root, win_w, win_h, cfg, title, name, gif_path, dismiss_text, duration, opacity)
+    else:
+        strings = STRINGS.get(lang, STRINGS["en"])
+        ex = random.choice(cfg["exercises"])
+        name = ex["name"].get(lang, ex["name"]["en"])
+        gif_path = resolve_gif(ex["key"])
+        has_gif = gif_path is not None
+        root, win_w, win_h = create_window(cfg, has_gif)
+        _show_overlay(root, win_w, win_h, cfg, strings["title"], name, gif_path, strings["dismiss"], duration, opacity)

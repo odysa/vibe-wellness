@@ -7,6 +7,10 @@
   "window_height_gif": 520,
   "window_height_no_gif": 280,
   "opacity": 0.92,
+  "sedentary": {
+    "enabled": true,
+    "interval": 1800
+  },
   "exercises": [
     { "key": "kegels", "name": { "en": "Kegels", "zh": "提肛" } },
     { "key": "drink_water", "name": { "en": "Drink Water", "zh": "喝水" } },

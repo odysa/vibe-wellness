@@ -17,6 +17,19 @@ STRINGS = {
     "zh": {"title": "动起来！", "dismiss": "点击关闭"},
 }
 
+SEDENTARY_STRINGS = {
+    "en": {
+        "title": "Sedentary Alert",
+        "message": "You've been sitting too long!\nStand up and stretch.",
+        "dismiss": "click to dismiss",
+    },
+    "zh": {
+        "title": "久坐提醒",
+        "message": "坐太久了！\n站起来活动一下吧",
+        "dismiss": "点击关闭",
+    },
+}
+
 
 def detect_system_lang():
     """Detect macOS system language, return 'en' or 'zh' etc."""

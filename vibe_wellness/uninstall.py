@@ -65,7 +65,7 @@ def main():
 
     # Remove tmp files
     say("Cleaning up")
-    for p in ["/tmp/vibe-wellness.lock", "/tmp/vibe-wellness-interval"]:
+    for p in ["/tmp/vibe-wellness.lock", "/tmp/vibe-wellness-interval", "/tmp/vibe-wellness-sedentary"]:
         path = Path(p)
         if path.exists():
             if path.is_dir():
