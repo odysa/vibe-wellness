@@ -4,6 +4,8 @@ Exercise reminder overlay for macOS. Pops up during Claude Code sessions to remi
 
 ![overlay](https://img.shields.io/badge/macOS-overlay-blue) ![python](https://img.shields.io/badge/python-3.12+-green) ![PyPI](https://img.shields.io/pypi/v/vibe-wellness)
 
+![demo](demo.gif)
+
 ## What it does
 
 A floating overlay window appears periodically when you're using Claude Code:
@@ -66,6 +68,8 @@ Edit `~/.config/vibe-wellness/config.json`:
 | `duration` | `30` | Overlay display time in seconds |
 | `opacity` | `0.95` | Window opacity (0.0 - 1.0) |
 | `exercises` | (built-in) | Custom exercise list |
+| `sedentary.enabled` | `true` | Enable sedentary reminder |
+| `sedentary.interval` | `1800` | Seconds between sedentary alerts |
 
 ### Custom exercises
 

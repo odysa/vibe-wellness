@@ -38,6 +38,8 @@ I18N = {
     "en": {
         "subtitle": "Exercise reminders for Claude Code",
         "interval": "Reminder interval",
+        "sedentary": "Sedentary reminder",
+        "sedentary_interval": "Sedentary reminder interval",
         "exercises": "Exercises",
         "installing": "Installing vibe-wellness",
         "config": "Setting up config",
@@ -60,6 +62,8 @@ I18N = {
     "zh": {
         "subtitle": "Claude Code 运动提醒",
         "interval": "提醒间隔",
+        "sedentary": "久坐提醒",
+        "sedentary_interval": "久坐提醒间隔",
         "exercises": "运动项目",
         "installing": "安装 vibe-wellness",
         "config": "配置",
@@ -284,6 +288,17 @@ def main():
             interval = 900
     print()
 
+    # Sedentary reminder
+    say(t["sedentary_interval"])
+    sed_interval = select([
+        ("20 min", 1200),
+        ("30 min", 1800),
+        ("45 min", 2700),
+        ("60 min", 3600),
+        ("Off / 关闭", 0),
+    ], default=1)
+    print()
+
     # Exercise selection
     from .config import PKG_DIR
     default_config = json.loads((PKG_DIR / "config.json").read_text())
@@ -313,7 +328,8 @@ def main():
     say(t["config"])
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "gifs").mkdir(exist_ok=True)
-    config = {"lang": lang, "interval": interval, "exercises": exercises}
+    sedentary = {"enabled": sed_interval > 0, "interval": sed_interval} if sed_interval else {"enabled": False}
+    config = {"lang": lang, "interval": interval, "sedentary": sedentary, "exercises": exercises}
     (CONFIG_DIR / "config.json").write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n")
     info(f"{t['wrote']} {CONFIG_DIR / 'config.json'}")
 

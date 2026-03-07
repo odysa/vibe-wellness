@@ -9,7 +9,7 @@ def main():
         show()
     elif "--overlay" in sys.argv:
         from .ui import main as overlay
-        overlay()
+        overlay(sedentary="--sedentary" in sys.argv)
     elif "--uninstall" in sys.argv:
         from .uninstall import main as uninstall
         uninstall()
