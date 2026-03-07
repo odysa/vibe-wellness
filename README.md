@@ -1,10 +1,12 @@
 # vibe-wellness
 
+[中文](README_zh.md)
+
 Exercise reminder overlay for macOS. Pops up during Claude Code sessions to remind you to move.
 
 ![overlay](https://img.shields.io/badge/macOS-overlay-blue) ![python](https://img.shields.io/badge/python-3.12+-green) ![PyPI](https://img.shields.io/pypi/v/vibe-wellness)
 
-![demo](demo.gif)
+![demo](docs/demo_en.gif)
 
 ## What it does
 
