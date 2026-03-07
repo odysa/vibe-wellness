@@ -53,13 +53,6 @@ def load_config():
     if USER_CONFIG.exists():
         with open(USER_CONFIG) as f:
             user = json.load(f)
-        # Merge exercises by key if both have them
-        if "exercises" in user and "exercises" in cfg:
-            defaults = {ex["key"]: ex for ex in cfg["exercises"]}
-            for ex in user["exercises"]:
-                defaults[ex["key"]] = ex
-            cfg["exercises"] = list(defaults.values())
-            del user["exercises"]
         cfg.update(user)
     return cfg
 
