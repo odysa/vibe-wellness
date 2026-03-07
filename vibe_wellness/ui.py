@@ -36,12 +36,20 @@ try:
         _objc.objc_msgSend.restype = ctypes.c_void_p
         return _objc.objc_msgSend(obj, _sel(selector), *args)
 
-    # Hide dock icon and menu bar (accessory mode)
-    _app = _msg(_objc.objc_getClass(b"NSApplication"), "sharedApplication")
-    _msg(_app, "setActivationPolicy:", ctypes.c_int64(1))
     _HAS_OBJC = True
 except Exception:
     _HAS_OBJC = False
+
+
+def _hide_dock_icon():
+    """Hide dock icon and menu bar (accessory mode). Must call after Tk() init."""
+    if not _HAS_OBJC:
+        return
+    try:
+        app = _msg(_objc.objc_getClass(b"NSApplication"), "sharedApplication")
+        _msg(app, "setActivationPolicy:", ctypes.c_int64(1))
+    except Exception:
+        pass
 
 
 def _make_borderless():
@@ -123,6 +131,7 @@ def get_main_display_size(root):
 
 def create_window(cfg, has_gif):
     root = tk.Tk()
+    _hide_dock_icon()
     root.title("")
     root.overrideredirect(True)
     root.attributes("-topmost", True)

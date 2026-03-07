@@ -501,7 +501,8 @@ def main() -> None:
         OUTPUT_PATH,
         save_all=True,
         append_images=palette_frames[1:],
-        optimize=True,
+        optimize=False,
+        disposal=2,
         loop=0,
         duration=FRAME_DURATION,
     )
