@@ -1,16 +1,14 @@
 # vibe-wellness
 
-[English](README.md)
-
-**你的 AI 搭档不需要锻炼，但你需要。**
-
 [![PyPI](https://img.shields.io/pypi/v/vibe-wellness)](https://pypi.org/project/vibe-wellness/) [![Publish](https://github.com/odysa/vibe-wellness/actions/workflows/publish.yml/badge.svg)](https://github.com/odysa/vibe-wellness/actions/workflows/publish.yml) ![macOS](https://img.shields.io/badge/macOS-overlay-blue) ![python](https://img.shields.io/badge/python-3.12+-green)
 
+[English](README.md)
+
+**我每天 vibe coding 超过 8 小时，一回神腰酸背痛，水都忘了喝。你是不是也一样？**
+
+**Claude Code 不需要锻炼，但你需要。**
+
 ![demo](docs/demo_zh.gif)
-
-## 为什么做这个
-
-我每天 vibe coding 超过 8 小时，一回神腰酸背痛，水都忘了喝。你是不是也一样？
 
 vibe-wellness 是一个 macOS 原生浮窗插件，直接嵌入 Claude Code 工作流，在你编码间隙提醒你运动、拉伸、喝水——不是那种你会无视的系统通知。
 
