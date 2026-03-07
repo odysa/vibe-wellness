@@ -57,19 +57,19 @@ Edit `~/.config/vibe-wellness/config.json`:
 ```json
 {
   "lang": "zh",
-  "interval": 900
+  "interval": 15
 }
 ```
 
 | Key | Default | Description |
 |-----|---------|-------------|
 | `lang` | `"auto"` | `"en"`, `"zh"`, or `"auto"` (detect system) |
-| `interval` | `900` | Seconds between reminders |
+| `interval` | `15` | Minutes between exercise reminders |
 | `duration` | `30` | Overlay display time in seconds |
 | `opacity` | `0.95` | Window opacity (0.0 - 1.0) |
 | `exercises` | (built-in) | Custom exercise list |
 | `sedentary.enabled` | `true` | Enable sedentary reminder |
-| `sedentary.interval` | `1800` | Seconds between sedentary alerts |
+| `sedentary.interval` | `30` | Minutes between sedentary alerts |
 
 ### Custom exercises
 

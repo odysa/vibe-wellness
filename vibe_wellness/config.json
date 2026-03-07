@@ -1,6 +1,6 @@
 {
   "lang": "auto",
-  "interval": 900,
+  "interval": 15,
   "duration": 30,
   "gif_speed": 140,
   "window_width": 420,
@@ -9,7 +9,7 @@
   "opacity": 0.92,
   "sedentary": {
     "enabled": true,
-    "interval": 1800
+    "interval": 30
   },
   "exercises": [
     { "key": "kegels", "name": { "en": "Kegels", "zh": "提肛" } },

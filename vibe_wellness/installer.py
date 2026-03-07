@@ -275,26 +275,26 @@ def main():
     # Interval
     say(t["interval"])
     interval = select([
-        ("10 min", 600),
-        ("15 min", 900),
-        ("20 min", 1200),
-        ("30 min", 1800),
+        ("10 min", 10),
+        ("15 min", 15),
+        ("20 min", 20),
+        ("30 min", 30),
         ("Custom / 自定义", "custom"),
     ], default=1)
     if interval == "custom":
         try:
-            interval = int(input(f"  {DIM}Seconds / 秒: {RESET}").strip())
+            interval = int(input(f"  {DIM}Minutes / 分钟: {RESET}").strip())
         except (ValueError, EOFError):
-            interval = 900
+            interval = 15
     print()
 
     # Sedentary reminder
     say(t["sedentary_interval"])
     sed_interval = select([
-        ("20 min", 1200),
-        ("30 min", 1800),
-        ("45 min", 2700),
-        ("60 min", 3600),
+        ("20 min", 20),
+        ("30 min", 30),
+        ("45 min", 45),
+        ("60 min", 60),
         ("Off / 关闭", 0),
     ], default=1)
     print()
@@ -396,10 +396,7 @@ def main():
     else:
         print(f"{BOLD}\033[31m  {t['done_partial']}{RESET}")
     print()
-    if interval >= 60:
-        info(t["remind_every"].format(interval // 60))
-    else:
-        info(f"Reminders every {interval}s")
+    info(t["remind_every"].format(interval))
     info(f"Config: {CONFIG_DIR / 'config.json'}")
     info(t["uninstall"])
     print()
