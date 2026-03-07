@@ -10,41 +10,47 @@ A floating overlay window appears periodically when you're using Claude Code:
 
 1. 3-second countdown with exercise name
 2. Animated stick figure GIF showing the exercise
-3. Auto-dismisses after 30 seconds (or click to dismiss)
+3. Progress bar + auto-dismiss after 30 seconds (or click to dismiss)
 
 ## Install
+
+One-liner:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/odysa/vibe-wellness/main/install.sh | bash
 ```
 
-The installer will:
-1. Install [uv](https://docs.astral.sh/uv/) (if not found)
-2. Install `vibe-wellness` from PyPI
-3. Run the interactive setup wizard
-
-### Manual install
-
-If you prefer to install manually:
+Or with [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv tool install vibe-wellness
-vibe-wellness          # run setup wizard
+uvx vibe-wellness
 ```
+
+Both methods will:
+1. Install `vibe-wellness` via `uv tool install`
+2. Run the interactive setup wizard (language, interval, exercises, hook)
+3. Create a hook script at `~/.claude/hooks/vibe-wellness/show.sh`
+4. Register the hook in `~/.claude/settings.json`
+
+### Re-configure
+
+Run `vibe-wellness` again to change settings.
 
 ## Exercises
 
-| Key | English | 中文 | GIF |
-|-----|---------|------|-----|
-| `kegels` | Kegels | 提肛 | included |
-| `drink_water` | Drink Water | 喝水 | included |
-| `squats` | Squats | 深蹲 | included |
-| `wall_pushups` | Wall Push-ups | 靠墙俯卧撑 | included |
-| `neck_rolls` | Neck Rolls | 颈椎运动 | included |
+| Key | English | 中文 |
+|-----|---------|------|
+| `kegels` | Kegels | 提肛 |
+| `drink_water` | Drink Water | 喝水 |
+| `squats` | Squats | 深蹲 |
+| `wall_pushups` | Wall Push-ups | 靠墙俯卧撑 |
+| `neck_rolls` | Neck Rolls | 颈椎运动 |
+
+All exercises include animated stick figure GIFs.
 
 ## Configuration
 
-Edit `~/.config/vibe-wellness/config.json`, or re-run `vibe-wellness` to launch the setup wizard.
+Edit `~/.config/vibe-wellness/config.json`:
 
 ```json
 {
@@ -55,15 +61,15 @@ Edit `~/.config/vibe-wellness/config.json`, or re-run `vibe-wellness` to launch 
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `lang` | `"auto"` | Language: `"en"`, `"zh"`, or `"auto"` (detect system) |
+| `lang` | `"auto"` | `"en"`, `"zh"`, or `"auto"` (detect system) |
 | `interval` | `900` | Seconds between reminders |
 | `duration` | `30` | Overlay display time in seconds |
-| `opacity` | `0.92` | Window opacity (0.0 - 1.0) |
-| `exercises` | (built-in) | Custom exercise list (see below) |
+| `opacity` | `0.95` | Window opacity (0.0 - 1.0) |
+| `exercises` | (built-in) | Custom exercise list |
 
 ### Custom exercises
 
-Add exercises in your config. They merge with defaults by `key`:
+Exercises merge with defaults by `key`:
 
 ```json
 {
@@ -75,7 +81,7 @@ Add exercises in your config. They merge with defaults by `key`:
 
 ### Custom GIFs
 
-Drop a `{key}.gif` in `~/.config/vibe-wellness/gifs/` to use your own animation for any exercise.
+Drop `{key}.gif` in `~/.config/vibe-wellness/gifs/` to override any exercise animation.
 
 ## Uninstall
 
@@ -83,26 +89,24 @@ Drop a `{key}.gif` in `~/.config/vibe-wellness/gifs/` to use your own animation 
 vibe-wellness --uninstall
 ```
 
-Or manually:
-
-```bash
-uv tool uninstall vibe-wellness
-rm -rf ~/.config/vibe-wellness
-```
-
-Then remove the `vibe-wellness` hook entry from `~/.claude/settings.json`.
-
-## Project structure
+## How it works
 
 ```
-install.sh                # Installer: installs package + runs setup
+~/.claude/settings.json          Hook triggers on UserPromptSubmit/Stop/Notification
+  -> ~/.claude/hooks/vibe-wellness/show.sh
+    -> ~/.local/bin/vibe-wellness --show
+      -> checks interval + single-instance lock
+      -> spawns overlay (tkinter, borderless, always-on-top)
+```
+
+```
 vibe_wellness/
-  cli.py                  # Entry point: --show / --overlay / --uninstall / setup
-  installer.py            # Interactive setup wizard (TUI)
-  show.py                 # Single-instance guard + interval check
-  ui.py                   # Overlay window (tkinter)
-  config.py               # Config loading, i18n, language detection
-  config.json             # Default config + exercises
-  uninstall.py            # Clean removal
-  gifs/                   # Bundled exercise GIFs
+  cli.py          Entry point
+  installer.py    Interactive setup wizard (TUI)
+  show.py         Single-instance guard + interval check
+  ui.py           Overlay window (tkinter + CoreGraphics + ObjC runtime)
+  config.py       Config loading, i18n, language detection
+  uninstall.py    Clean removal
+  config.json     Default exercises
+  gifs/           Bundled exercise GIFs
 ```

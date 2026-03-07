@@ -44,6 +44,9 @@ def show():
         except ValueError:
             pass
 
+    # Write timestamp before spawning to prevent races with concurrent hooks
+    INTERVAL_FILE.write_text(str(int(time.time())))
+
     # Spawn overlay as detached process
     proc = subprocess.Popen(
         [sys.executable, "-m", "vibe_wellness", "--overlay"],
@@ -52,4 +55,3 @@ def show():
         stderr=subprocess.DEVNULL,
     )
     (LOCK_DIR / "pid").write_text(str(proc.pid))
-    INTERVAL_FILE.write_text(str(int(time.time())))

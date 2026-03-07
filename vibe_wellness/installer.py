@@ -2,6 +2,7 @@
 
 import json
 import shutil
+import subprocess
 import sys
 import termios
 import tty
@@ -9,7 +10,10 @@ from pathlib import Path
 
 CONFIG_DIR = Path.home() / ".config" / "vibe-wellness"
 SETTINGS = Path.home() / ".claude" / "settings.json"
-HOOK_CMD = "vibe-wellness --show"
+HOOK_DIR = Path.home() / ".claude" / "hooks" / "vibe-wellness"
+HOOK_SCRIPT = HOOK_DIR / "show.sh"
+BIN_PATH = Path.home() / ".local" / "bin" / "vibe-wellness"
+HOOK_CMD = str(HOOK_SCRIPT)
 
 
 def hook_installed(event):
@@ -35,6 +39,7 @@ I18N = {
         "subtitle": "Exercise reminders for Claude Code",
         "interval": "Reminder interval",
         "exercises": "Exercises",
+        "installing": "Installing vibe-wellness",
         "config": "Setting up config",
         "wrote": "Wrote",
         "hook_title": "Claude Code hook",
@@ -56,6 +61,7 @@ I18N = {
         "subtitle": "Claude Code 运动提醒",
         "interval": "提醒间隔",
         "exercises": "运动项目",
+        "installing": "安装 vibe-wellness",
         "config": "配置",
         "wrote": "已写入",
         "hook_title": "Claude Code 钩子",
@@ -129,7 +135,10 @@ def select(options, default=0):
         for i, (label, _) in enumerate(options):
             marker = ">" if i == default else " "
             print(f"  {marker} {label}")
-        choice = input(f"  [{default + 1}]: ").strip()
+        try:
+            choice = input(f"  [{default + 1}]: ").strip()
+        except EOFError:
+            return options[default][1]
         try:
             return options[int(choice) - 1][1]
         except (ValueError, IndexError):
@@ -173,7 +182,10 @@ def multiselect(options, selected=None):
         for i, label in enumerate(options):
             check = "*" if i in selected else " "
             print(f"  [{check}] {i + 1}. {label}")
-        choice = input(f"  Toggle (e.g. 1,3) or enter for all: ").strip()
+        try:
+            choice = input(f"  Toggle (e.g. 1,3) or enter for all: ").strip()
+        except EOFError:
+            return sorted(selected)
         if choice:
             for num in choice.split(","):
                 try:
@@ -222,6 +234,20 @@ def main():
     print(f"{BOLD}  vibe-wellness setup{RESET}")
     print()
 
+    # Install binary if not already present (e.g. running via uvx)
+    if not BIN_PATH.exists():
+        if shutil.which("uv"):
+            say("Installing vibe-wellness")
+            subprocess.run(
+                ["uv", "tool", "install", "vibe-wellness", "--force", "--no-cache"],
+                check=True,
+            )
+            print()
+        if not BIN_PATH.exists():
+            print(f"  \033[31m{BIN_PATH} not found after install.\033[0m")
+            print(f"  Run manually: uv tool install vibe-wellness")
+            print()
+
     # Language (always bilingual)
     say("Language / 语言")
     lang = select([
@@ -249,7 +275,13 @@ def main():
         ("15 min", 900),
         ("20 min", 1200),
         ("30 min", 1800),
+        ("Custom / 自定义", "custom"),
     ], default=1)
+    if interval == "custom":
+        try:
+            interval = int(input(f"  {DIM}Seconds / 秒: {RESET}").strip())
+        except (ValueError, EOFError):
+            interval = 900
     print()
 
     # Exercise selection
@@ -268,6 +300,14 @@ def main():
     hook_options = HOOKS.get(display_lang, HOOKS["en"])
     hook_event = select(hook_options, default=0)
     print()
+
+    # Create hook script
+    HOOK_DIR.mkdir(parents=True, exist_ok=True)
+    HOOK_SCRIPT.write_text(
+        f"#!/bin/bash\n"
+        f"{BIN_PATH} --show\n"
+    )
+    HOOK_SCRIPT.chmod(0o755)
 
     # User config
     say(t["config"])
@@ -292,7 +332,19 @@ def main():
                     break
 
         if already:
-            info(t["hook_already"])
+            # Update old hooks that use short command to full path
+            updated = False
+            for group in settings.get("hooks", {}).get(hook_event, []):
+                for h in group.get("hooks", []):
+                    cmd = h.get("command", "")
+                    if "vibe-wellness" in cmd and cmd != HOOK_CMD:
+                        h["command"] = HOOK_CMD
+                        updated = True
+            if updated:
+                SETTINGS.write_text(json.dumps(settings, indent=2) + "\n")
+                info(f"{t['hook_added']} ({hook_event})")
+            else:
+                info(t["hook_already"])
         else:
             hooks = settings.setdefault("hooks", {})
             hooks.setdefault(hook_event, []).append({
@@ -310,7 +362,7 @@ def main():
     # Verify
     say(t["verify"])
     checks = [
-        (shutil.which("vibe-wellness") is not None, t["check_tool"]),
+        (BIN_PATH.exists() or shutil.which("vibe-wellness") is not None, t["check_tool"]),
         ((CONFIG_DIR / "config.json").exists(), t["check_config"]),
         (hook_installed(hook_event), t["check_hook"].format(hook_event)),
     ]
@@ -328,7 +380,10 @@ def main():
     else:
         print(f"{BOLD}\033[31m  {t['done_partial']}{RESET}")
     print()
-    info(t["remind_every"].format(interval // 60))
+    if interval >= 60:
+        info(t["remind_every"].format(interval // 60))
+    else:
+        info(f"Reminders every {interval}s")
     info(f"Config: {CONFIG_DIR / 'config.json'}")
     info(t["uninstall"])
     print()
