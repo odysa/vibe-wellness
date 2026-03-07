@@ -56,7 +56,7 @@ def show():
     # Check sedentary first (independent interval)
     sed_cfg = cfg.get("sedentary", {})
     sed_enabled = sed_cfg.get("enabled", True)
-    sed_interval = sed_cfg.get("interval", 1800)
+    sed_interval = sed_cfg.get("interval", 30) * 60
 
     if sed_enabled and _interval_due(SEDENTARY_INTERVAL_FILE, sed_interval):
         SEDENTARY_INTERVAL_FILE.write_text(str(int(time.time())))
@@ -70,7 +70,7 @@ def show():
         return
 
     # Check exercise interval
-    interval = cfg.get("interval", 900)
+    interval = cfg.get("interval", 15) * 60
     if _interval_due(INTERVAL_FILE, interval):
         INTERVAL_FILE.write_text(str(int(time.time())))
         proc = subprocess.Popen(
